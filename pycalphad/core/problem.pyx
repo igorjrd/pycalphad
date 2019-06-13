@@ -36,6 +36,14 @@ def _pinv_derivative(a, a_pinv, a_prime):
                                                               a_prime.T[dof_idx]), a_pinv.T), a_pinv)
     return result
 
+cdef void _from_tril_to_square(double[::1] flattened_tril, double[:, ::1] out) nogil:
+    cdef size_t row, col, k
+    k = 0
+    for row in range(out.shape[0]):
+        for col in range(0, row+1):
+            out[row, col] = flattened_tril[k]
+            out[col, row] = flattened_tril[k]
+            k = k + 1
 
 cdef class Problem:
     def __init__(self, comp_sets, comps, conditions):
@@ -173,20 +181,23 @@ cdef class Problem:
         gradient_term[np.isnan(gradient_term)] = 0
         return gradient_term
 
-    def hessian(self, x_in):
+    def obj_hessian(self, x_in):
         cdef CompositionSet compset = self.composition_sets[0]
         cdef size_t num_statevars = len(compset.phase_record.state_variables)
         cdef double[:, ::1] hess = np.zeros((self.num_vars, self.num_vars))
         cdef double[::1] hess_tmp = np.zeros((self.num_vars * self.num_vars))
+        cdef double[::1] hess_tmp_flat = np.zeros((self.num_vars * self.num_vars))
         cdef double[::1] grad_tmp = np.zeros(self.num_vars)
+        cdef double[::1] hess_tmp_flat_view
         cdef double[:, ::1] hess_tmp_view
         cdef double[::1] x = np.array(x_in)
         cdef double[::1] x_tmp = np.zeros(x.shape[0])
         cdef double phase_frac = 0
         cdef size_t var_idx = 0
         cdef size_t phase_idx, grad_idx, cons_idx, dof_idx, sv_idx
-        cdef size_t row, col
+        cdef size_t row, col, k
         cdef size_t constraint_offset = 0
+        cdef size_t nele_hess
         x_tmp[:num_statevars] = x[:num_statevars]
         var_idx = num_statevars
         for phase_idx in range(self.num_phases):
@@ -194,10 +205,17 @@ cdef class Problem:
             phase_frac = x[self.num_vars - self.num_phases + phase_idx]
             x_tmp[num_statevars:num_statevars+compset.phase_record.phase_dof] = \
                 x[var_idx:var_idx+compset.phase_record.phase_dof]
+            compset.phase_record.grad(grad_tmp, x_tmp)
+            # Lower triangular elements including diagonal
+            nele_hess = (num_statevars + compset.phase_record.phase_dof) * (num_statevars + compset.phase_record.phase_dof + 1)/2
+            hess_tmp_flat_view = <double[:nele_hess]>&hess_tmp_flat[0]
+            compset.phase_record.hess(hess_tmp_flat_view, x_tmp)
+            # Convert to square matrix
             hess_tmp_view = <double[:num_statevars+compset.phase_record.phase_dof,
                                     :num_statevars+compset.phase_record.phase_dof]>&hess_tmp[0]
-            compset.phase_record.grad(grad_tmp, x_tmp)
-            compset.phase_record.hess(hess_tmp_view, x_tmp)
+
+            _from_tril_to_square(hess_tmp_flat_view, hess_tmp_view)
+
             for row in range(compset.phase_record.phase_dof):
                 for col in range(compset.phase_record.phase_dof):
                     hess[var_idx+row, var_idx+col] = \
@@ -224,10 +242,104 @@ cdef class Problem:
                 hess[self.num_vars - self.num_phases + phase_idx, sv_idx] = grad_tmp[sv_idx]
                 hess[sv_idx, self.num_vars - self.num_phases + phase_idx] = grad_tmp[sv_idx]
             hess_tmp[:] = 0
+            hess_tmp_flat[:] = 0
             grad_tmp[:] = 0
             x_tmp[num_statevars:] = 0
             var_idx += compset.phase_record.phase_dof
         return np.array(hess)
+
+    def hessian(self, x_in, lagrange, obj_factor):
+        cdef CompositionSet compset = self.composition_sets[0]
+        cdef int num_statevars = len(compset.phase_record.state_variables)
+        cdef double[:, ::1] hess = obj_factor * self.obj_hessian(x_in)
+        cdef double[::1] constraint_hess_tmp = np.zeros(self.num_constraints * self.num_vars * self.num_vars)
+        cdef double[:, :, ::1] constraint_hess_tmp_view
+        cdef double[::1] lmul = lagrange
+        cdef double[::1] x = np.array(x_in)
+        cdef double[::1] x_tmp = np.zeros(x.shape[0])
+        cdef int constraint_offset = 0
+        cdef int var_idx = 0
+        cdef int idx, phase_idx, idx_row, idx_col, iter_idx, cons_idx
+
+        x_tmp[:num_statevars] = x[:num_statevars]
+        # First: Fixed degree of freedom constraints (linear)
+        constraint_offset += self.num_fixed_dof_constraints
+
+        # Second: Phase internal constraints
+        var_idx = num_statevars
+        for phase_idx in range(self.num_phases):
+            compset = self.composition_sets[phase_idx]
+            x_tmp[num_statevars:num_statevars+compset.phase_record.phase_dof] = \
+                x[var_idx:var_idx+compset.phase_record.phase_dof]
+            constraint_hess_tmp_view = <double[:compset.phase_record.num_internal_cons,
+                                               :num_statevars+compset.phase_record.phase_dof,
+                                               :num_statevars+compset.phase_record.phase_dof]>&constraint_hess_tmp[0]
+            compset.phase_record.internal_cons_hessian(constraint_hess_tmp_view, x_tmp)
+            for cons_idx in range(compset.phase_record.num_internal_cons):
+                for idx_row in range(num_statevars):
+                    for idx_col in range(idx_row, num_statevars):
+                        hess[idx_row, idx_col] += lmul[constraint_offset + cons_idx] * \
+                                                  constraint_hess_tmp_view[cons_idx, idx_row, idx_col]
+                        if idx_row != idx_col:
+                            hess[idx_col, idx_row] += lmul[constraint_offset + cons_idx] * \
+                                                    constraint_hess_tmp_view[cons_idx, idx_col, idx_row]
+                for idx_row in range(compset.phase_record.phase_dof):
+                    for idx_col in range(idx_row, compset.phase_record.phase_dof):
+                        hess[var_idx + idx_row, var_idx + idx_col] += lmul[constraint_offset + cons_idx] * \
+                                                  constraint_hess_tmp_view[cons_idx, num_statevars+idx_row, num_statevars+idx_col]
+                        if idx_row != idx_col:
+                            hess[var_idx + idx_col, var_idx + idx_row] += lmul[constraint_offset + cons_idx] * \
+                                                  constraint_hess_tmp_view[cons_idx, num_statevars+idx_col, num_statevars+idx_row]
+            # No phase fraction contribution, by definition
+            constraint_hess_tmp[:] = 0
+            x_tmp[num_statevars:] = 0
+            var_idx += compset.phase_record.phase_dof
+            constraint_offset += compset.phase_record.num_internal_cons
+
+        var_idx = num_statevars
+        # Third: Multiphase constraints
+        for phase_idx in range(self.num_phases):
+            compset = self.composition_sets[phase_idx]
+            spidx = self.num_vars - self.num_phases + phase_idx
+            x_tmp[num_statevars:num_statevars+compset.phase_record.phase_dof] = \
+                x[var_idx:var_idx+compset.phase_record.phase_dof]
+            x_tmp[num_statevars+compset.phase_record.phase_dof] = x[spidx]
+            constraint_hess_tmp_view = <double[:compset.phase_record.num_multiphase_cons,
+                                               :num_statevars+1+compset.phase_record.phase_dof,
+                                               :num_statevars+1+compset.phase_record.phase_dof]>&constraint_hess_tmp[0]
+            compset.phase_record.multiphase_cons_hessian(constraint_hess_tmp_view, x_tmp)
+            for cons_idx in range(compset.phase_record.num_multiphase_cons):
+                for idx_row in range(num_statevars):
+                    for idx_col in range(idx_row, num_statevars):
+                        hess[idx_row, idx_col] += lmul[constraint_offset + cons_idx] * \
+                                                  constraint_hess_tmp_view[cons_idx, idx_row, idx_col]
+                        if idx_row != idx_col:
+                            hess[idx_col, idx_row] += lmul[constraint_offset + cons_idx] * \
+                                                    constraint_hess_tmp_view[cons_idx, idx_col, idx_row]
+                for idx_row in range(compset.phase_record.phase_dof):
+                    for idx_col in range(idx_row, compset.phase_record.phase_dof):
+                        hess[var_idx + idx_row, var_idx + idx_col] += lmul[constraint_offset + cons_idx] * \
+                                                  constraint_hess_tmp_view[cons_idx, num_statevars+idx_row, num_statevars+idx_col]
+                        if idx_row != idx_col:
+                            hess[var_idx + idx_col, var_idx + idx_row] += lmul[constraint_offset + cons_idx] * \
+                                                  constraint_hess_tmp_view[cons_idx, num_statevars+idx_col, num_statevars+idx_row]
+                # wrt phase amount
+                for idx_row in range(num_statevars):
+                    hess[idx_row, spidx] += lmul[constraint_offset + cons_idx] * constraint_hess_tmp_view[cons_idx, idx_row, -1]
+                    hess[spidx, idx_row] += lmul[constraint_offset + cons_idx] * constraint_hess_tmp_view[cons_idx, -1, idx_row]
+                for idx_row in range(compset.phase_record.phase_dof):
+                    hess[var_idx + idx_row, spidx] += lmul[constraint_offset + cons_idx] * constraint_hess_tmp_view[cons_idx, num_statevars + idx_row, -1]
+                    hess[spidx, var_idx + idx_row] += lmul[constraint_offset + cons_idx] * constraint_hess_tmp_view[cons_idx, -1, num_statevars + idx_row]
+            x_tmp[num_statevars:] = 0
+            constraint_hess_tmp[:] = 0
+            var_idx += compset.phase_record.phase_dof
+        constraint_offset += compset.phase_record.num_multiphase_cons
+
+        # Fourth: Chemical potential constraints
+        if len(self.fixed_chempot_indices) > 0:
+            raise NotImplementedError('Chemical potential Hessian not implemented yet')
+        result = np.array(hess)[np.tril_indices(hess.shape[0])]
+        return result
 
     def mass_gradient(self, x_in):
         cdef CompositionSet compset = self.composition_sets[0]
@@ -314,7 +426,7 @@ cdef class Problem:
         jac = self.mass_jacobian(x_in).T
         jac_pinv = np.linalg.pinv(jac)
         #mass_hess = np.swapaxes(self.mass_cons_hessian(x_in), 0, 1)
-        hess = self.hessian(x_in)
+        hess = self.obj_hessian(x_in)
         #jac_pinv_prime = _pinv_derivative(jac, jac_pinv, mass_hess)
         mu_prime = np.dot(jac_pinv, hess)
         return mu_prime[-len(self.nonvacant_elements):]
