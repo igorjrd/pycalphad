@@ -231,10 +231,12 @@ def equilibrium(dbf, comps, phases, conditions, output=None, model=None,
     output = set(output)
     output |= {'GM'}
     output = sorted(output)
-    phase_records = build_phase_records(dbf, comps, active_phases, conds, models,
-                                        output='GM', callables=callables,
-                                        parameters=parameters, verbose=verbose,
-                                        build_gradients=True, build_hessians=True)
+    phase_records = kwargs.pop('phase_records', None)
+    if phase_records is None:
+        phase_records = build_phase_records(dbf, comps, active_phases, conds, models,
+                                            output='GM', callables=callables,
+                                            parameters=parameters, verbose=verbose,
+                                            build_gradients=True, build_hessians=True)
     if verbose:
         print('[done]', end='\n')
 
@@ -245,7 +247,8 @@ def equilibrium(dbf, comps, phases, conditions, output=None, model=None,
     if 'pdens' not in grid_opts:
         grid_opts['pdens'] = 500
     grid = calculate(dbf, comps, active_phases, model=models, fake_points=True,
-                     callables=callables, output='GM', parameters=parameters, **grid_opts)
+                     phase_records=phase_records, callables=callables,
+                     output='GM', parameters=parameters, **grid_opts)
     coord_dict = str_conds.copy()
     coord_dict['vertex'] = np.arange(len(pure_elements) + 1)  # +1 is to accommodate the degenerate degree of freedom at the invariant reactions
     coord_dict['component'] = pure_elements

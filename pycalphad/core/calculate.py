@@ -300,6 +300,7 @@ def calculate(dbf, comps, phases, mode=None, output='GM', fake_points=False, bro
     callables = kwargs.pop('callables', {})
     sampler_dict = unpack_kwarg(kwargs.pop('sampler', None), default_arg=None)
     fixedgrid_dict = unpack_kwarg(kwargs.pop('grid_points', True), default_arg=True)
+    phase_records = kwargs.pop('phase_records', None)
     parameters = parameters or dict()
     if isinstance(parameters, dict):
         parameters = OrderedDict(sorted(parameters.items(), key=str))
@@ -343,10 +344,11 @@ def calculate(dbf, comps, phases, mode=None, output='GM', fake_points=False, bro
     statevar_dict = dict((v.StateVariable(key), unpack_condition(value)) for key, value in kwargs.items() if key in statevar_strings)
     # Sort after default state variable check to fix gh-116
     statevar_dict = collections.OrderedDict(sorted(statevar_dict.items(), key=lambda x: str(x[0])))
-    phase_records = build_phase_records(dbf, comps, active_phases, statevar_dict,
-                                   models=models, parameters=parameters,
-                                   output=output, callables=callables, build_gradients=False, build_hessians=False,
-                                   verbose=kwargs.pop('verbose', False))
+    if phase_records is None:
+        phase_records = build_phase_records(dbf, comps, active_phases, statevar_dict,
+                                       models=models, parameters=parameters,
+                                       output=output, callables=callables, build_gradients=False, build_hessians=False,
+                                       verbose=kwargs.pop('verbose', False))
     str_statevar_dict = collections.OrderedDict((str(key), unpack_condition(value)) \
                                                 for (key, value) in statevar_dict.items())
     maximum_internal_dof = max(len(models[phase_name].site_fractions) for phase_name in active_phases)
