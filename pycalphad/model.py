@@ -153,6 +153,7 @@ class Model(object):
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> FIX: pure vacancy phase detection
 =======
@@ -167,6 +168,8 @@ class Model(object):
                 .format(self.phase_name, phase.constituents))
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> FIX: pure vacancy phase detection
 =======
 >>>>>>> FIX: pure vacancy phase detection
 =======
@@ -180,6 +183,7 @@ class Model(object):
             self.constituents.append(sublattice_comps)
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> FIX: pure vacancy phase detection
 =======
             is_pure_VA.add(sum(set(map(lambda s : getattr(s, 'number_of_atoms'),sublattice_comps))))
@@ -211,6 +215,8 @@ class Model(object):
             raise DofError(
                 '{0}: Sublattices of {1} contains only VA (VACUUM) constituents' \
                 .format(self.phase_name, phase.constituents))
+>>>>>>> FIX: pure vacancy phase detection
+=======
 >>>>>>> FIX: pure vacancy phase detection
         self.components = sorted(self.components)
         desired_active_pure_elements = [list(x.constituents.keys()) for x in self.components]
@@ -1170,6 +1176,7 @@ class TestModel(Model):
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> FIX: pure vacancy phase detection
 =======
@@ -1197,4 +1204,10 @@ class TestModel(Model):
 >>>>>>> FIX: pure vacancy phase detection
 >>>>>>> FIX: pure vacancy phase detection
 =======
+>>>>>>> FIX: pure vacancy phase detection
+=======
+
+
+
+#%%
 >>>>>>> FIX: pure vacancy phase detection
