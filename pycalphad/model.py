@@ -155,6 +155,33 @@ class Model(object):
             raise DofError(
                 '{0}: Sublattices of {1} contains only VA (VACUUM) constituents' \
                 .format(self.phase_name, phase.constituents))
+            if sum(set(map(lambda s : getattr(s, 'number_of_atoms'),sublattice_comps))) == 0:
+                #The only possible component in a sublattice is vacancy
+                #We cannot build a model of this phase
+                raise DofError(
+                    '{0}: Sublattices of {1} contains only VA (VACUUM) constituents' \
+                    .format(self.phase_name, phase.constituents))
+            self.constituents.append(sublattice_comps)
+            is_pure_VA.add(sum(set(map(lambda s : getattr(s, 'number_of_atoms'),sublattice_comps))))
+            self.constituents.append(sublattice_comps)
+            is_pure_VA.add(sum(set(map(lambda s : getattr(s, 'number_of_atoms'),sublattice_comps))))
+            self.constituents.append(sublattice_comps)
+            is_pure_VA.add(sum(set(map(lambda s : getattr(s, 'number_of_atoms'),sublattice_comps))))
+            self.constituents.append(sublattice_comps)
+        if sum(is_pure_VA) == 0:
+            #The only possible component in a sublattice is vacancy
+            #We cannot build a model of this phase
+            raise DofError(
+                '{0}: Sublattices of {1} contains only VA (VACUUM) constituents' \
+                .format(self.phase_name, phase.constituents))
+            is_pure_VA.add(sum(set(map(lambda s : getattr(s, 'number_of_atoms'),sublattice_comps))))
+            self.constituents.append(sublattice_comps)
+        if sum(is_pure_VA) == 0:
+            #The only possible component in a sublattice is vacancy
+            #We cannot build a model of this phase
+            raise DofError(
+                '{0}: Sublattices of {1} contains only VA (VACUUM) constituents' \
+                .format(self.phase_name, phase.constituents))
         self.components = sorted(self.components)
         desired_active_pure_elements = [list(x.constituents.keys()) for x in self.components]
         desired_active_pure_elements = [el.upper() for constituents in desired_active_pure_elements
