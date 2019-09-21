@@ -1130,9 +1130,12 @@ class TestModel(Model):
                       for i in range(kmax)])
         self.models['test'] = scale_factor * Add(*[(varname - sol)**2 for varname, sol in self.solution.items()]) + polys
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 
 
 
 #%%
+>>>>>>> FIX: pure vacancy phase detection
+=======
 >>>>>>> FIX: pure vacancy phase detection
