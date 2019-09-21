@@ -4313,6 +4313,9 @@ $ CU-MG NIMS
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> FIX: pure vacancy phase detection
 CUMG_PARAMETERS_TDB = """
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 $ Date: 2018-12-18 11:03
@@ -4457,6 +4460,9 @@ PARAMETER L(LIQUID,CU,MG;3) 1 VV0011#; 10000 N !
 
 =======
 >>>>>>> FIX: pure vacancy phase detection
+<<<<<<< HEAD
+=======
+>>>>>>> FIX: pure vacancy phase detection
 =======
 >>>>>>> FIX: pure vacancy phase detection
 ZRO2_CUBIC_BCC_TDB = """
@@ -4474,10 +4480,16 @@ ZRO2_CUBIC_BCC_TDB = """
     CONSTITUENT ZRO2_CUBIC  :VA,ZR% : O%,VA :  !
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> FIX: pure vacancy phase detection
 """
 =======
 """
 >>>>>>> FIX: pure vacancy phase detection
+<<<<<<< HEAD
 =======
 """
+>>>>>>> FIX: pure vacancy phase detection
+=======
 >>>>>>> FIX: pure vacancy phase detection

@@ -1169,6 +1169,9 @@ class TestModel(Model):
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> FIX: pure vacancy phase detection
 =======
 >>>>>>> FIX: pure vacancy phase detection
 =======
@@ -1188,7 +1191,10 @@ class TestModel(Model):
 >>>>>>> FIX: pure vacancy phase detection
 =======
 >>>>>>> FIX: pure vacancy phase detection
+<<<<<<< HEAD
 =======
 #%%
 >>>>>>> FIX: pure vacancy phase detection
+>>>>>>> FIX: pure vacancy phase detection
+=======
 >>>>>>> FIX: pure vacancy phase detection
