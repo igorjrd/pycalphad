@@ -30,6 +30,7 @@ def phase_legend(phases):
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     colorvalues = [
         '00538A', 'F4C800', 'F13A13', 'C10020', 'D2F300', '53377A', '7BD1EC',
         '232C16', 'FE4262', 'C0DE00', '704AA4', 'FFB300', '176136', '7F180D',
@@ -40,6 +41,8 @@ def phase_legend(phases):
         'B15106', 'EE8548', '97691C', 'DF6B10', '987155', 'C76F32', 'B37347',
     ]
 =======
+=======
+>>>>>>> ENH: Use better colors in phase_legend()
     colorvalues = ['#00538a', '#f4c800', '#f13a13', '#c10020', '#d2f300',
                    '#53377a', '#7bd1ec', '#232c16', '#fe4262', '#c0de00',
                    '#704aa4', '#ffb300', '#176136', '#7f180d', '#93aa00',
@@ -50,6 +53,7 @@ def phase_legend(phases):
                    '#7b3d0b', '#ff7a5c', '#cea262', '#c01f3d', '#d39336',
                    '#817066', '#96541f', '#eb9867', '#b15106', '#ee8548',
                    '#97691c', '#df6b10', '#987155', '#c76f32', '#b37347']
+<<<<<<< HEAD
 >>>>>>> ENH: Use better colors in phase_legend()
 =======
     colorvalues = ['00538a', 'f4c800', 'f13a13', 'c10020', 'd2f300',
@@ -74,6 +78,8 @@ def phase_legend(phases):
         'B15106', 'EE8548', '97691C', 'DF6B10', '987155', 'C76F32', 'B37347',
     ]
 >>>>>>> Update installation instructions to include
+=======
+>>>>>>> ENH: Use better colors in phase_legend()
     mxx = len(colorvalues)
     phasecount = 0
     legend_handles = []
