@@ -38,6 +38,7 @@ def phase_legend(phases):
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> ENH: Use better colors in phase_legend()
 =======
@@ -149,6 +150,17 @@ def phase_legend(phases):
 >>>>>>> ENH: Use better colors in phase_legend()
 =======
 >>>>>>> ENH:  Use better colors in phase_legend()
+=======
+    colorvalues = [
+        '00538a', 'f4c800', 'f13a13', 'c10020', 'd2f300', '53377a', '7bd1ec',
+        '232c16', 'fe4262', 'c0de00', '704aa4', 'ffb300', '176136', '7f180d',
+        '93aa00', '2b85eb', 'f6768e', '007d34', '803e75', '4a7c01', 'ff8e00',
+        'ec1840', '178d39', 'b32851', '577c23', 'a6bdd7', 'fd522b', '526b2e',
+        '90324e', '593315', 'b6a0d4', 'ff6800', 'cea262', '9a7cc4', '91250b',
+        '7b3d0b', 'ff7a5c', 'c01f3d', 'd39336', '817066', '96541f', 'eb9867',
+        'b15106', 'ee8548', '97691c', 'df6b10', '987155', 'c76f32', 'b37347'
+    ]
+>>>>>>> Update installation instructions to include
     mxx = len(colorvalues)
     phasecount = 0
     legend_handles = []
